@@ -192,6 +192,12 @@ def train(network,X,t,mini_batch_size=10,alpha=0.5,epochs=30):
 
 
 # In[7]:
+def find_accuracy(O,t):
+    correct_predictions = O==t
+    
+    accuracy = (np.sum(correct_predictions)/t.shape[0])*100 
+
+    return accuracy
 
 
 def test(network,X,t):
@@ -208,15 +214,10 @@ def test(network,X,t):
     #print("t=",t)
     #display_error = np.average(np.where(O==t, 0, 1))
     
-    correct_predictions = O==t
+    accuracy = find_accuracy(O,t)
 
-
-    display_error = 1-(np.sum(correct_predictions)/t.shape[0]) 
-
-    print("Error =",display_error*100, "%")
+    print("Accuracy =",accuracy, "%")
     
-
-
 # In[8]:
 
 
