@@ -208,12 +208,12 @@ def test(network,X,t):
     #print("t=",t)
     #display_error = np.average(np.where(O==t, 0, 1))
     
-    
+    correct_predictions = O==t
 
 
-    #display_error = 
+    display_error = 1-(np.sum(correct_predictions)/t.shape[0]) 
 
-    print("Error =",display_error, "%")
+    print("Error =",display_error*100, "%")
     
 
 
