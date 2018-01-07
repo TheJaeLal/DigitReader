@@ -1,26 +1,13 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 #Import Statements
 import mnist_loader
-
 import numpy as np
-
-
-# In[2]:
-
+import random
 
 def weighted_sum(X,W,B):
     #y = wtranspose.x + biases
     #print("Dimensions of X,W,B:",X.shape,W.shape,B.shape)
     Y = X.dot(W) + B
     return Y
-
-
-# In[3]:
 
 
 def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
@@ -46,10 +33,6 @@ def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
     #print(O)
     #O = np.argmax(O,axis=1)+1
     return O
-
-
-# In[4]:
-
 
 #Backpropogate the error from output layer..
 def backprop(network,error_output_layer,Weighted_Sums):
@@ -102,10 +85,6 @@ def backprop(network,error_output_layer,Weighted_Sums):
     #print("Error = ",error)
     return error
 
-
-# In[5]:
-
-
 def update_weights(network,Inputs,error,alpha):
     
     #print("Updating network weghts, layer :",end=" ")
@@ -134,7 +113,6 @@ def update_weights(network,Inputs,error,alpha):
         
         
         """
-
         network.weights[i] -= alpha * dw
         # if np.array_equal(old_weights, network.weights[i]):
         # 	print("No update!")
@@ -147,28 +125,41 @@ def update_weights(network,Inputs,error,alpha):
 
     return
 
-
-# In[6]:
-
-
-def train(network,X,t,mini_batch_size=10,alpha=0.5,epochs=30):
+def train(network,X,t,mini_batch_size=10,alpha=0.5,epochs=50):
     alpha = alpha/mini_batch_size
+
     for i in range(epochs): 
         print("Epoch",i+1,":",end=" ")
-        
         """
-        
         mini_batches = [training_data[k:k+mini_batch_size] for k in range(0, n, mini_batch_size)]
-        
-        
         """
+
+        training_list = [ [X[i],t[i]] for i in range(X.shape[0]) ]
+        
+        random.shuffle(training_list)    
+
         Inputs = []
         Weighted_Sums = []
         train_set_size = 50000
         for k1 in range(0,train_set_size,mini_batch_size):
-            Xbatch = X[k1:k1+mini_batch_size]
-            tbatch = t[k1:k1+mini_batch_size]
             
+            training_batch = training_list[k1:k1+mini_batch_size]
+            #print(training_batch[0][0].shape)
+            #print(training_base.shape)
+            Xbatch = np.array([sample[0] for sample in training_batch])
+            #print(Xbatch.shape)
+            tbatch = np.array([sample[1] for sample in training_batch])
+            #print(tbatch.shape)
+
+            # Xbatch = Xbatch.reshape(len(training_batch),1)
+            # tbatch = tbatch.reshape(len(training_batch),1)
+
+            #Xbatch = training_base[:,0]
+            #print(Xbatch.shape)
+            #tbatch = training_base[:,1]
+
+            #tbatch = np.array(training_list[k1:k1+mini_batch_size][1])
+            #print(tbatch.shape)
             #Calculate output, while storing the weighted_sums and input at each layer
             O = forward_pass(Xbatch,network,Weighted_Sums,Inputs,store=True)
 
@@ -185,13 +176,10 @@ def train(network,X,t,mini_batch_size=10,alpha=0.5,epochs=30):
             
             update_weights(network,Inputs,error,alpha)
 
-
         test(network,validation_data[0],validation_data[1])
 
     return
 
-
-# In[7]:
 def find_accuracy(O,t):
     correct_predictions = O==t
     
@@ -217,9 +205,6 @@ def test(network,X,t):
     accuracy = find_accuracy(O,t)
 
     print("Accuracy =",accuracy, "%")
-    
-# In[8]:
-
 
 #Returns the error in output layer...
 def calc_error(Weighted_Sums,O,t):
@@ -254,31 +239,16 @@ def calc_error(Weighted_Sums,O,t):
     return error_in_output_layer
 
 
-# In[9]:
-
-
 def sigmoid_gradient(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
-
-
-# In[10]:
-
 
 #Activation Function
 def ReLU(z):
     return np.maximum(z,0,z)
 
-
-# In[11]:
-
-
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
-
-
-# In[12]:
-
 
 class Network:
     def __init__(self,layers):
@@ -292,57 +262,21 @@ class Network:
         for i in range(1, len(layers)):
             rows = layers[i-1] #784
             cols = layers[i] #28
-            layer_weight = (np.random.random((rows,cols))-0.5)*200
-            layer_bias = (np.random.random(layers[i])-0.5)*200
+            #Using Xavier Initialization
+            layer_weight = np.random.randn(rows,cols).astype(np.float32) * np.sqrt(6.0 /(rows+cols))
+            layer_bias = np.zeros(layers[i]).astype(np.float32)
             self.weights.append(layer_weight)
             self.biases.append(layer_bias)
 
-
-# In[13]:
-
-
-my_net = Network([784,28,10])
-#my_net.weights
-
-
-# In[14]:
-
-
-# X = np.random.random((5,784))
-
-
-# In[15]:
-
-
-# t = np.array([
-#               [0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],
-#               [0,1,0,0,0,0,0,0,0,0],[0,1,0,0,0,0,0,0,0,0],
-#               [0,1,0,0,0,0,0,0,0,0]
-#             ])
-
-
-# In[16]:
-
+my_net = Network([784,15,10])
 
 training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 X = training_data[0]
 t = training_data[1]
 
-
-# In[17]:
-
-
-train(my_net,X,t)
-
-
-# In[18]:
-
+#print("X =",X.shape,"\nt =",t.shape)
+train(my_net,X,t,mini_batch_size=10,alpha=1,epochs=200)
 
 print("On Test Data:",end=" ")
+
 test(my_net,test_data[0],test_data[1])
-
-
-# In[19]:
-
-
-
