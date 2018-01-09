@@ -275,7 +275,7 @@ X = training_data[0]
 t = training_data[1]
 
 #print("X =",X.shape,"\nt =",t.shape)
-train(my_net,X,t,mini_batch_size=10,alpha=1,epochs=200)
+train(my_net,X,t,mini_batch_size=50,alpha=12,epochs=200)
 
 print("On Test Data:",end=" ")
 
