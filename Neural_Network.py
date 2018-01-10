@@ -18,7 +18,8 @@ def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
     Y = weighted_sum(X,W,B)
     if store:
         Weighted_Sums.append(Y)
-    O = sigmoid(Y)
+    #O = sigmoid(Y)
+    O = ReLU(Y)
     for i in range(1,len(network.weights)):
         W = network.weights[i]
         B = network.biases[i]
@@ -28,7 +29,8 @@ def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
         Y = weighted_sum(O,W,B)
         if store:
        	    Weighted_Sums.append(Y)
-        O = sigmoid(Y)
+        #O = sigmoid(Y)
+        O = ReLU(Y)
     #Final Output = maximum value from output classes (10 in the digit recognizer case)
     #print(O)
     #O = np.argmax(O,axis=1)+1
@@ -76,7 +78,8 @@ def backprop(network,error_output_layer,Weighted_Sums):
         
         #print("something = ",something)
         #print("Weighted_Sums[",i,"] =",Weighted_Sums[i])
-        error[i] = something * sigmoid_gradient(Weighted_Sums[i]) 
+        #error[i] = something * sigmoid_gradient(Weighted_Sums[i])
+        error[i] = something * ReLU_gradient(Weighted_Sums[i]) 
         #print("sigmoid_gradient(Weighted_Sums[",i,"]) =",sigmoid_gradient(Weighted_Sums[i]))
         
         #error[0]--> (,)
@@ -219,7 +222,8 @@ def calc_error(Weighted_Sums,O,t):
     #do --> (5,)
     
     #sigma-dash(ZsubL) --> sig_grad
-    sig_grad = sigmoid_gradient(Weighted_Sums[-1])
+    #sig_grad = sigmoid_gradient(Weighted_Sums[-1])
+    relu_grad = ReLU_gradient(Weighted_Sums[-1])
     #--->
     #print("---Shape of last Weighted Sums layer = ",Weighted_Sums[-1].shape)
     
@@ -229,7 +233,8 @@ def calc_error(Weighted_Sums,O,t):
     #print("sig_grad = ",sig_grad)
     #print("do = ",do)
     
-    error_in_output_layer = do * sig_grad
+    #error_in_output_layer = do * sig_grad
+    error_in_output_layer = do * relu_grad
     
     #(5,10) hadamard (5,10) --> (5,10)
     
@@ -238,17 +243,20 @@ def calc_error(Weighted_Sums,O,t):
     #print("Error_in_output_layer =",error_in_output_layer)
     return error_in_output_layer
 
+#Activation Function
+def sigmoid(z):
+    return 1.0/(1.0 + np.exp(-z))
 
 def sigmoid_gradient(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
 
-#Activation Function
 def ReLU(z):
-    return np.maximum(z,0,z)
+    return np.maximum(z,0)
 
-def sigmoid(z):
-    return 1.0/(1.0 + np.exp(-z))
+def ReLU_gradient(z):
+    """Derivative of ReLU function """
+    return np.heaviside(z,1)
 
 class Network:
     def __init__(self,layers):
