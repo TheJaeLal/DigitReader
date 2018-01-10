@@ -2,6 +2,7 @@
 import mnist_loader
 import numpy as np
 import random
+from sklearn.utils.extmath import softmax
 
 def weighted_sum(X,W,B):
     #y = wtranspose.x + biases
@@ -30,7 +31,10 @@ def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
         if store:
        	    Weighted_Sums.append(Y)
         #O = sigmoid(Y)
-        O = ReLU(Y)
+        if i==len(network.weights)-1:
+            O = softmax(Y)
+        else:
+            O = ReLU(Y)
     #Final Output = maximum value from output classes (10 in the digit recognizer case)
     #print(O)
     #O = np.argmax(O,axis=1)+1
@@ -249,14 +253,22 @@ def sigmoid(z):
 
 def sigmoid_gradient(z):
     """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1-sigmoid(z))
+    return sigmoid(z)*(1.0-sigmoid(z))
 
 def ReLU(z):
-    return np.maximum(z,0)
+    """ReLU activation function
+        returns z if z >= 0.0
+        z otherwise 
+    """
+    return np.maximum(z,0.0)
 
 def ReLU_gradient(z):
-    """Derivative of ReLU function """
-    return np.heaviside(z,1)
+    """Derivative of ReLU function 
+        returns 1.0 if z >=0
+        and 0.0 otherwise
+    """
+    return np.heaviside(z,1.0)
+
 
 class Network:
     def __init__(self,layers):
@@ -283,7 +295,7 @@ X = training_data[0]
 t = training_data[1]
 
 #print("X =",X.shape,"\nt =",t.shape)
-train(my_net,X,t,mini_batch_size=50,alpha=12,epochs=200)
+train(my_net,X,t,mini_batch_size=10,alpha=0.01,epochs=50)
 
 print("On Test Data:",end=" ")
 
