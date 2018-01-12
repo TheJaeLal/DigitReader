@@ -205,7 +205,7 @@ def test(network,X,t):
     #print("Shape of O =",O.shape)
     #print("O=",O)    
 
-    O = np.argmax(O,axis=1)+1
+    O = np.argmax(O,axis=1)
     #print("t=",t)
     #display_error = np.average(np.where(O==t, 0, 1))
     
@@ -288,14 +288,14 @@ class Network:
             self.weights.append(layer_weight)
             self.biases.append(layer_bias)
 
-my_net = Network([784,16,16,10])
+my_net = Network([784,30,10])
 
 training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 X = training_data[0]
 t = training_data[1]
 
 #print("X =",X.shape,"\nt =",t.shape)
-train(my_net,X,t,mini_batch_size=10,alpha=0.01,epochs=50)
+train(my_net,X,t,mini_batch_size=10,alpha=0.5,epochs=50)
 
 print("On Test Data:",end=" ")
 
