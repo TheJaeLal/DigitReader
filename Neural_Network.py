@@ -288,7 +288,7 @@ class Network:
             self.weights.append(layer_weight)
             self.biases.append(layer_bias)
 
-my_net = Network([784,15,10])
+my_net = Network([784,16,16,10])
 
 training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
 X = training_data[0]
