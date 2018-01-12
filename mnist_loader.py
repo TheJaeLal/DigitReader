@@ -20,6 +20,10 @@ def load_data():
     """Return the MNIST data as a tuple containing the training data,
     the validation data, and the test data.
 
+	training_data = (X,y)
+	X --> input 
+	y --> desired output --> label
+	
     The ``training_data`` is returned as a tuple with two entries.
     The first entry contains the actual training images.  This is a
     numpy ndarray with 50,000 entries.  Each entry is, in turn, a
@@ -40,9 +44,9 @@ def load_data():
     below.
     """
     f = gzip.open('mnist.pkl.gz', 'rb')
-    training_data, validation_data, test_data = cPickle.load(f,encoding='latin1')
-    f.close()
-    return (training_data, validation_data, test_data)
+    data = cPickle.load(f,encoding='latin1')
+  	f.close()
+    return data
 
 def load_data_wrapper():
     """Return a tuple containing ``(training_data, validation_data,
