@@ -1,21 +1,12 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 #Import Statements
 import numpy as np
 import mnist_loader
 import random
 
-
-# In[2]:
-
-
 class Network:
+
     #Construcutor
-    def __init__(self,neurons):
+    def __init__(self,neurons,initialization):
         self.layers = len(neurons)
         self.neurons = neurons
         
@@ -23,31 +14,44 @@ class Network:
         self.biases = []
         
         #Initialize weights
-        for i in range(1,self.layers):
-            #layer_weight = None
-            rows  = neurons[i]
-            cols = neurons[i-1]
-            #Creates a numpy array with dimensions rows x cols
-            #At the same time, initializes them with random normal distribution b/w 0 and 1
-            
-            #layer_weight = np.zeros((rows,cols))
-            layer_weight = np.random.randn(rows,cols)
-            self.weights.append(layer_weight)
+        if initialization.lower() == "xavier":
+        	self.init_xavier()
 
-            #layer_bias = np.zeros((rows,1))
-            layer_bias = np.random.randn(rows,1)
-            self.biases.append(layer_bias)
+        elif initialization.lower() in ["zeros","zero"] :
+        	self.init_zero()
 
+        else:
+        	self.init_random()
 
-# In[3]:
+        return
+
+    #Weights Initialization strategies..
+    def init_xavier(self):
+    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]) * np.sqrt(6.0 /(self.neurons[i]+self.neurons[i-1])) for i in range(1,self.layers)]
+    	self.biases = [np.zeros((self.neurons[i],1)) for i in range(1,self.layers)]
+    	return
+
+    def init_zero(self):
+    	self.weights = [np.zeros((self.neurons[i],self.neurons[i-1])) for i in range(1,self.layers)]
+    	self.biases = [np.zeros((self.neurons[i],1)) for i in range(1,self.layers)]
+    	return
+    
+    #Random -> normal distribution and not uniform distribution
+    def init_random(self):
+    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]) for i in range(1,self.layers)]
+    	self.biases = [np.random.randn(self.neurons[i],1) for i in range(1,self.layers)]
+    	return
+
 
 
 def sigmoid(z):
     return 1.0/(1.0 + np.exp(-z))
 
-
-# In[4]:
-
+def sigmoid_derivative(z):
+    return sigmoid(z)*(1-sigmoid(z))
+    
+def cost_gradient(output,label):
+    return output-label
 
 def feedforward(network,X):
     
@@ -73,46 +77,6 @@ def feedforward(network,X):
 
     return (Weighted_Sums,Layer_Activations)
 
-
-# In[5]:
-
-
-def test(network,test_data):
-
-    _,activations = feedforward(network,test_data[0])
-    
-    Output = activations[-1]
-    Target = test_data[1]
-    
-    #Output --> (10,Number_of_training_Samples)
-    #Target --> (Number_of_traing_Samples)
-    
-    Prediction = np.argmax(Output,axis=0)
-    #Prediction --> (Number_of_training_Samples,)    
-        
-    return sum((Prediction == Target))
-
-
-# In[6]:
-
-
-def sigmoid_derivative(z):
-    #print("sigmoid_derivative =",sigmoid(z)*(1-sigmoid(z)) )
-    return sigmoid(z)*(1-sigmoid(z))
-    
-
-
-# In[7]:
-
-
-def cost_gradient(output,label):
-    #print("cost_gradient =",output-label)
-    return output-label
-
-
-# In[8]:
-
-
 def backprop(network,delta_output_layer,weighted_sums):
     #Initialize error for all layers
     #delta is the backpropogation error
@@ -130,67 +94,52 @@ def backprop(network,delta_output_layer,weighted_sums):
     return delta_all_layers
 
 
-# In[9]:
-
-
 def update_weights(network,X,layer_activations,delta_all_layers,alpha):
     
-    #before_weight = np.array(network.weights[0],copy=True)
-    #print("alpha = ",alpha)
-
+    #number of weights (weighted_layers)
     n_weights = network.layers-1
+
     for i in range(n_weights):
         
-        #print("shape of delta_all_layers[",i,"]:",delta_all_layers[i].shape)
-        #print("shape of layer_activations[",i,"].transpose():",delta_all_layers[i].transpose().shape)            
         if i==0:
             layer_input = X
         else:
             layer_input = layer_activations[i-1]
         
-       #print("delta for layer {0} = {1}".format(i,delta_all_layers))
-
         dcdw = np.dot(delta_all_layers[i],layer_input.transpose())
         dcb = np.average(delta_all_layers[i],axis=1).reshape(delta_all_layers[i].shape[0],1)
-        #print("shape of dcdw:",dcdw.shape)
-        #print("shape of dcb:",dcb.shape)
-        #print("shape of network.weights[",i,"]:",network.weights[i].shape)
         
-       #print("dcdw for layer {0} = {1}".format(i,dcdw))
-       #print("dcb for layer {0} = {1}".format(i,dcb))
-    #     bmax_val = np.amax(network.weights[i])
-    #     bmin_val = np.amin(network.weights[i])
         network.weights[i] -= alpha * dcdw
         network.biases[i] -= alpha * dcb
-    #     amax_val = np.amax(network.weights[i])
-    #     amin_val = np.amin(network.weights[i])
-
-
-    # if amax_val==bmax_val and amin_val == bmin_val:
-    #     print("No update")
 
     return
 
+def test(network,test_data):
 
-# In[10]:
+    _,activations = feedforward(network,test_data[0])
+    
+    Output = activations[-1]
+    Target = test_data[1]
+    
+    #Output --> (10,Number_of_training_Samples)
+    #Target --> (Number_of_traing_Samples)
+    
+    Prediction = np.argmax(Output,axis=0)
+    #Prediction --> (Number_of_training_Samples,)    
+        
+    return sum((Prediction == Target))
 
-
-def train_GD(network,train_data,valid_data,mini_batch_size=100,alpha=1,epochs=50):
+def train_SGD(network,train_data,valid_data,mini_batch_size,alpha,epochs):
     
     X = train_data[0] #(784,50000)
     y = train_data[1] #(10,50000)
-    #print(X.shape,y.shape)
     
     alpha = alpha/float(mini_batch_size)
     for e in range(epochs):
 
         Xtrans = X.transpose()
         ytrans = y.transpose()
-        #print("Xtrans[0].shape",Xtrans[0].shape)
-        #print("ytrans[0].shape",ytrans[0].shape)
-        #print("Xtrans[0].reshape(X.shape[0],1).shape",Xtrans[0].reshape(X.shape[0],1).shape)
-        
-        #------------------Al right----------------#
+
         training_list = [ [ Xtrans[i],ytrans[i] ] for i in range(X.shape[1]) ]
 
         random.shuffle(training_list)
@@ -199,13 +148,11 @@ def train_GD(network,train_data,valid_data,mini_batch_size=100,alpha=1,epochs=50
 
             #list --> subset of training_list
             training_batch = training_list[k1:k1+mini_batch_size]
-
             
             Xbatch = np.array([sample[0] for sample in training_batch]).transpose()
             
             ybatch = np.array([sample[1] for sample in training_batch]).transpose()
             
-            #print("Dimensions of Xbathc,ybatch ->",Xbatch.shape, ybatch.shape)
             #Step 1: Calculate Output
             weighted_sums,activations = feedforward(network,Xbatch)
 
@@ -219,20 +166,24 @@ def train_GD(network,train_data,valid_data,mini_batch_size=100,alpha=1,epochs=50
             update_weights(network,Xbatch,activations,delta_all_layers,alpha)
 
         #Step 5: Validation Testing
-
-
-        print("End of Epoch",e," accuracy =",(test(network,valid_data)/valid_data[1].shape[0])*100)
+        accuracy = (test(network,valid_data)/valid_data[1].shape[0])*100.0
+        print("End of Epoch {}: accuracy = {}".format(e,accuracy))
     
     return
 
-
-# In[11]:
-
 def main():
+	#Load Data
     train_data,valid_data,test_data = mnist_loader.load_data_wrapper()
-    network = Network([784,15,10])
-    train_GD(network,train_data,valid_data,mini_batch_size=10,alpha=0.5,epochs=30)
+    
+    #Initilaize Neural network with following number of neurons in respective layers
+    network = Network([784,15,10],initialization = "xavier")
+
+    #Train the Network using Stochastic Gradient Descent
+    train_SGD(network,train_data,valid_data,mini_batch_size=10,alpha=0.3,epochs=50)
+    
+    #Test the network on Testing Data..
     accuracy = (test(network,test_data)/valid_data[1].shape[0])*100
+    
     print("On Testing Data: Accuracy =",accuracy)
 
 
