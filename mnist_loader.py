@@ -75,7 +75,7 @@ def load_data_wrapper():
     training_data = (training_inputs, training_results)
     validation_inputs = va_d[0].transpose()
     validation_data = (validation_inputs, va_d[1])
-    test_inputs = te_d[0]
+    test_inputs = te_d[0].transpose()
     test_data = (test_inputs, te_d[1])
     return (training_data, validation_data, test_data)
 

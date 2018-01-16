@@ -1,302 +1,240 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
 #Import Statements
-import mnist_loader
 import numpy as np
+import mnist_loader
 import random
-from sklearn.utils.extmath import softmax
-
-def weighted_sum(X,W,B):
-    #y = wtranspose.x + biases
-    #print("Dimensions of X,W,B:",X.shape,W.shape,B.shape)
-    Y = X.dot(W) + B
-    return Y
 
 
-def forward_pass(X,network,Weighted_Sums,Inputs,store=False):
-    W = network.weights[0]
-    B = network.biases[0]
-    if store:
-        Inputs.append(X)
-    Y = weighted_sum(X,W,B)
-    if store:
-        Weighted_Sums.append(Y)
-    #O = sigmoid(Y)
-    O = ReLU(Y)
-    for i in range(1,len(network.weights)):
-        W = network.weights[i]
-        B = network.biases[i]
-        if store:
-            Inputs.append(O)
-        #Calculate weighted sum, wTx+B
-        Y = weighted_sum(O,W,B)
-        if store:
-       	    Weighted_Sums.append(Y)
-        #O = sigmoid(Y)
-        if i==len(network.weights)-1:
-            O = softmax(Y)
-        else:
-            O = ReLU(Y)
-    #Final Output = maximum value from output classes (10 in the digit recognizer case)
-    #print(O)
-    #O = np.argmax(O,axis=1)+1
-    return O
-
-#Backpropogate the error from output layer..
-def backprop(network,error_output_layer,Weighted_Sums):
-
-    #Create a list of length --> network.weights and initialize it with None
-    error = [None]*len(network.weights)
-    error[-1] = error_output_layer
-    
-    #Goes from 2nd last layer to 2nd layer
-    
-    #4layers
-    #error[3] --> output
-    #len(nw.wets) --> 3
-    #3-1 --> 2
-    #for i in range(2,0) --> i ka values --> [2,1]
-    #print("network.weights.len = ",len(network.weights))
-    
-    #print("some_str",some_variable,some_other,var,"end_str")
-    #print("abc"+str(some_var))
-    
-    #len -> 2, then i = 0
-    for i in range(len(network.weights)-2,-1,-1):
-        #print("***Backprop Error for layer :",i)
-        
-        #Backprop error
-        #δl=((wl+1)Tδl+1)⊙σ′(zl),
-        
-        #1st iteration ---> i=2nd last, i+1=last/output
-        #print("Dimensions of weights[i+1],error[i+1]",network.weights[i+1].shape,error[i+1].shape)
-    
-        #print("error[",i+1,"] =",error[i+1])
-        #print("np.transpose(network.weights[",i+1,"]) =",np.transpose(network.weights[i+1]))
-        #Dimensions of weights[i+1],error[i+1] (28, 10) (5, 10)
-        something = error[i+1].dot(np.transpose(network.weights[i+1])) 
-        #something---> should be (5,28)
-        
-        
-        #print("Dimensions of something,weighted_sums[i]",something.shape,Weighted_Sums[i].shape)
-        # Dimensions of something,weighted_sums[i] (28,) (5, 28)
-        
-        
-        #print("something = ",something)
-        #print("Weighted_Sums[",i,"] =",Weighted_Sums[i])
-        #error[i] = something * sigmoid_gradient(Weighted_Sums[i])
-        error[i] = something * ReLU_gradient(Weighted_Sums[i]) 
-        #print("sigmoid_gradient(Weighted_Sums[",i,"]) =",sigmoid_gradient(Weighted_Sums[i]))
-        
-        #error[0]--> (,)
-        # (x,y) hadamard (5,28) --> (5,28)
-        
-    #print("Error = ",error)
-    return error
-
-def update_weights(network,Inputs,error,alpha):
-    
-    #print("Updating network weghts, layer :",end=" ")
-    for i in range(len(network.weights)):
-        #print(i+1)
-        #Inputs contains an extra element X at the begining, hence i
-        #print(i,error[i]) #-->0,None, error[0]--None
-        
-        # dw = al-1 . errorl
-        dw = np.transpose(Inputs[i]).dot(error[i])
-
-        #Inputs[i] --> (5,784)
-        #error[i] --> (5,28)
-        # dw --> (784,28)
-        #Inputs --> list of all inputs. Inputs[0]--> X Inputs[1] --> O1
-        #Incoming Input --> to a Computational Neuron with some weights to that input
-
-        #error[i] --> for 5 training samples, you are getting change in biases
-        db = np.average(error[i],axis=0)
-        """
-            [
-                [1,2,3,4,5],
-                [2,3,5,6,7]
-            
-            ]
-        
-        
-        """
-        network.weights[i] -= alpha * dw
-        # if np.array_equal(old_weights, network.weights[i]):
-        # 	print("No update!")
-        # else:
-        # 	print("Weights are updated!")
-        #print("Dimensions of biases,db",network.biases[i].shape,db.shape)
-        #Dimensions of biases,db (28,) (5, 28)
-
-        network.biases[i]  -= alpha * db
-
-    return
-
-def train(network,X,t,mini_batch_size=10,alpha=0.5,epochs=50):
-    alpha = alpha/mini_batch_size
-
-    for i in range(epochs): 
-        print("Epoch",i+1,":",end=" ")
-        """
-        mini_batches = [training_data[k:k+mini_batch_size] for k in range(0, n, mini_batch_size)]
-        """
-
-        training_list = [ [X[i],t[i]] for i in range(X.shape[0]) ]
-        
-        random.shuffle(training_list)    
-
-        Inputs = []
-        Weighted_Sums = []
-        train_set_size = 50000
-        for k1 in range(0,train_set_size,mini_batch_size):
-            
-            training_batch = training_list[k1:k1+mini_batch_size]
-            #print(training_batch[0][0].shape)
-            #print(training_base.shape)
-            Xbatch = np.array([sample[0] for sample in training_batch])
-            #print(Xbatch.shape)
-            tbatch = np.array([sample[1] for sample in training_batch])
-            #print(tbatch.shape)
-
-            # Xbatch = Xbatch.reshape(len(training_batch),1)
-            # tbatch = tbatch.reshape(len(training_batch),1)
-
-            #Xbatch = training_base[:,0]
-            #print(Xbatch.shape)
-            #tbatch = training_base[:,1]
-
-            #tbatch = np.array(training_list[k1:k1+mini_batch_size][1])
-            #print(tbatch.shape)
-            #Calculate output, while storing the weighted_sums and input at each layer
-            O = forward_pass(Xbatch,network,Weighted_Sums,Inputs,store=True)
-
-            #Calculate error in output layer
-            error_output_layer = calc_error(Weighted_Sums,O,tbatch)
-
-            #display_error = np.average(error_output_layer)
-            #print(display_error)
-
-            #print("Epoch",i,": Error = "+str(display_error))
-
-            #Update weights
-            error = backprop(network,error_output_layer,Weighted_Sums)
-            
-            update_weights(network,Inputs,error,alpha)
-
-        test(network,validation_data[0],validation_data[1])
-
-    return
-
-def find_accuracy(O,t):
-    correct_predictions = O==t
-    
-    accuracy = (np.sum(correct_predictions)/t.shape[0])*100 
-
-    return accuracy
-
-
-def test(network,X,t):
-    # Inputs = []
-    # Weighted_Sums = []
-
-    #passing None,None, cuz no neee
-    O = forward_pass(X,network,None,None)
-
-    #print("Shape of O =",O.shape)
-    #print("O=",O)    
-
-    O = np.argmax(O,axis=1)
-    #print("t=",t)
-    #display_error = np.average(np.where(O==t, 0, 1))
-    
-    accuracy = find_accuracy(O,t)
-
-    print("Accuracy =",accuracy, "%")
-
-#Returns the error in output layer...
-def calc_error(Weighted_Sums,O,t):
-    
-    #partial-derivative -->dL/d(o) --> do
-    
-    #do = -(t/O + (1-t)/(1-O))
-    
-    do = O - t
-    #t --> (5,)
-    #O --> (5,)
-    #do --> (5,)
-    
-    #sigma-dash(ZsubL) --> sig_grad
-    #sig_grad = sigmoid_gradient(Weighted_Sums[-1])
-    relu_grad = ReLU_gradient(Weighted_Sums[-1])
-    #--->
-    #print("---Shape of last Weighted Sums layer = ",Weighted_Sums[-1].shape)
-    
-    #numpy array consisting of errors for each neuron in the output layer
-    #print("+++Shape of do,sig_grad",do.shape,sig_grad.shape)
-    #[1,2,3,4,5] dot [[1,0,0,0,],[],...[]]
-    #print("sig_grad = ",sig_grad)
-    #print("do = ",do)
-    
-    #error_in_output_layer = do * sig_grad
-    error_in_output_layer = do * relu_grad
-    
-    #(5,10) hadamard (5,10) --> (5,10)
-    
-    #should return np array with dims (5,10)
-    #print("---Shape of Error in output_layer = ",error_in_output_layer.shape)
-    #print("Error_in_output_layer =",error_in_output_layer)
-    return error_in_output_layer
-
-#Activation Function
-def sigmoid(z):
-    return 1.0/(1.0 + np.exp(-z))
-
-def sigmoid_gradient(z):
-    """Derivative of the sigmoid function."""
-    return sigmoid(z)*(1.0-sigmoid(z))
-
-def ReLU(z):
-    """ReLU activation function
-        returns z if z >= 0.0
-        z otherwise 
-    """
-    return np.maximum(z,0.0)
-
-def ReLU_gradient(z):
-    """Derivative of ReLU function 
-        returns 1.0 if z >=0
-        and 0.0 otherwise
-    """
-    return np.heaviside(z,1.0)
+# In[2]:
 
 
 class Network:
-    def __init__(self,layers):
-        if len(layers)<2:
-            print("Cannot create Neural Network with less than 2 layers")
-            return
-        self.layers = layers
+    #Construcutor
+    def __init__(self,neurons):
+        self.layers = len(neurons)
+        self.neurons = neurons
+        
         self.weights = []
         self.biases = []
         
-        for i in range(1, len(layers)):
-            rows = layers[i-1] #784
-            cols = layers[i] #28
-            #Using Xavier Initialization
-            layer_weight = np.random.randn(rows,cols).astype(np.float32) * np.sqrt(6.0 /(rows+cols))
-            layer_bias = np.zeros(layers[i]).astype(np.float32)
+        #Initialize weights
+        for i in range(1,self.layers):
+            #layer_weight = None
+            rows  = neurons[i]
+            cols = neurons[i-1]
+            #Creates a numpy array with dimensions rows x cols
+            #At the same time, initializes them with random normal distribution b/w 0 and 1
+            
+            #layer_weight = np.zeros((rows,cols))
+            layer_weight = np.random.randn(rows,cols)
             self.weights.append(layer_weight)
+
+            #layer_bias = np.zeros((rows,1))
+            layer_bias = np.random.randn(rows,1)
             self.biases.append(layer_bias)
 
-my_net = Network([784,30,10])
 
-training_data, validation_data, test_data = mnist_loader.load_data_wrapper()
-X = training_data[0]
-t = training_data[1]
+# In[3]:
 
-#print("X =",X.shape,"\nt =",t.shape)
-train(my_net,X,t,mini_batch_size=10,alpha=0.5,epochs=50)
 
-print("On Test Data:",end=" ")
+def sigmoid(z):
+    return 1.0/(1.0 + np.exp(-z))
 
-test(my_net,test_data[0],test_data[1])
+
+# In[4]:
+
+
+def feedforward(network,X):
+    
+    #Stores the Aj values
+    Layer_Activations = []
+    
+    #Stores the Zj values
+    Weighted_Sums = []
+    
+    for i in range(1,network.layers):
+   
+        if i==1:
+            A = X
+        else:
+            A  = Layer_Activations[-1]
+        
+        W = network.weights[i-1]
+        B = network.biases[i-1]
+        Z = np.dot(W,A) + B
+        Weighted_Sums.append(Z)
+        A = sigmoid(Z)
+        Layer_Activations.append(A)
+
+    return (Weighted_Sums,Layer_Activations)
+
+
+# In[5]:
+
+
+def test(network,test_data):
+
+    _,activations = feedforward(network,test_data[0])
+    
+    Output = activations[-1]
+    Target = test_data[1]
+    
+    #Output --> (10,Number_of_training_Samples)
+    #Target --> (Number_of_traing_Samples)
+    
+    Prediction = np.argmax(Output,axis=0)
+    #Prediction --> (Number_of_training_Samples,)    
+        
+    return sum((Prediction == Target))
+
+
+# In[6]:
+
+
+def sigmoid_derivative(z):
+    #print("sigmoid_derivative =",sigmoid(z)*(1-sigmoid(z)) )
+    return sigmoid(z)*(1-sigmoid(z))
+    
+
+
+# In[7]:
+
+
+def cost_gradient(output,label):
+    #print("cost_gradient =",output-label)
+    return output-label
+
+
+# In[8]:
+
+
+def backprop(network,delta_output_layer,weighted_sums):
+    #Initialize error for all layers
+    #delta is the backpropogation error
+    
+    #Number of output layers --> first layer is an input layer, hence excluded
+    n_out = network.layers-1
+    
+    delta_all_layers = [None]*(n_out)
+    
+    delta_all_layers[-1] = delta_output_layer
+    
+    for i in range(n_out-2,-1,-1):
+        delta_all_layers[i] = np.dot(network.weights[i+1].transpose(),delta_all_layers[i+1])*sigmoid_derivative(weighted_sums[i])
+            
+    return delta_all_layers
+
+
+# In[9]:
+
+
+def update_weights(network,X,layer_activations,delta_all_layers,alpha):
+    
+    #before_weight = np.array(network.weights[0],copy=True)
+    #print("alpha = ",alpha)
+
+    n_weights = network.layers-1
+    for i in range(n_weights):
+        
+        #print("shape of delta_all_layers[",i,"]:",delta_all_layers[i].shape)
+        #print("shape of layer_activations[",i,"].transpose():",delta_all_layers[i].transpose().shape)            
+        if i==0:
+            layer_input = X
+        else:
+            layer_input = layer_activations[i-1]
+        
+       #print("delta for layer {0} = {1}".format(i,delta_all_layers))
+
+        dcdw = np.dot(delta_all_layers[i],layer_input.transpose())
+        dcb = np.average(delta_all_layers[i],axis=1).reshape(delta_all_layers[i].shape[0],1)
+        #print("shape of dcdw:",dcdw.shape)
+        #print("shape of dcb:",dcb.shape)
+        #print("shape of network.weights[",i,"]:",network.weights[i].shape)
+        
+       #print("dcdw for layer {0} = {1}".format(i,dcdw))
+       #print("dcb for layer {0} = {1}".format(i,dcb))
+    #     bmax_val = np.amax(network.weights[i])
+    #     bmin_val = np.amin(network.weights[i])
+        network.weights[i] -= alpha * dcdw
+        network.biases[i] -= alpha * dcb
+    #     amax_val = np.amax(network.weights[i])
+    #     amin_val = np.amin(network.weights[i])
+
+
+    # if amax_val==bmax_val and amin_val == bmin_val:
+    #     print("No update")
+
+    return
+
+
+# In[10]:
+
+
+def train_GD(network,train_data,valid_data,mini_batch_size=100,alpha=1,epochs=50):
+    
+    X = train_data[0] #(784,50000)
+    y = train_data[1] #(10,50000)
+    #print(X.shape,y.shape)
+    
+    alpha = alpha/float(mini_batch_size)
+    for e in range(epochs):
+
+        Xtrans = X.transpose()
+        ytrans = y.transpose()
+        #print("Xtrans[0].shape",Xtrans[0].shape)
+        #print("ytrans[0].shape",ytrans[0].shape)
+        #print("Xtrans[0].reshape(X.shape[0],1).shape",Xtrans[0].reshape(X.shape[0],1).shape)
+        
+        #------------------Al right----------------#
+        training_list = [ [ Xtrans[i],ytrans[i] ] for i in range(X.shape[1]) ]
+
+        random.shuffle(training_list)
+        
+        for k1 in range(0,len(training_list),mini_batch_size):
+
+            #list --> subset of training_list
+            training_batch = training_list[k1:k1+mini_batch_size]
+
+            
+            Xbatch = np.array([sample[0] for sample in training_batch]).transpose()
+            
+            ybatch = np.array([sample[1] for sample in training_batch]).transpose()
+            
+            #print("Dimensions of Xbathc,ybatch ->",Xbatch.shape, ybatch.shape)
+            #Step 1: Calculate Output
+            weighted_sums,activations = feedforward(network,Xbatch)
+
+            #Step 2: Calculate Error at final layer
+            delta_output_layer = cost_gradient(activations[-1],ybatch)*sigmoid_derivative(weighted_sums[-1])
+
+            #Step 3: Backpropogate Error
+            delta_all_layers = backprop(network,delta_output_layer,weighted_sums)
+
+            #Step 4: Update Weights
+            update_weights(network,Xbatch,activations,delta_all_layers,alpha)
+
+        #Step 5: Validation Testing
+
+
+        print("End of Epoch",e," accuracy =",(test(network,valid_data)/valid_data[1].shape[0])*100)
+    
+    return
+
+
+# In[11]:
+
+def main():
+    train_data,valid_data,test_data = mnist_loader.load_data_wrapper()
+    network = Network([784,15,10])
+    train_GD(network,train_data,valid_data,mini_batch_size=10,alpha=0.5,epochs=30)
+    accuracy = (test(network,test_data)/valid_data[1].shape[0])*100
+    print("On Testing Data: Accuracy =",accuracy)
+
+
+if __name__=='__main__':
+    main()
