@@ -93,6 +93,15 @@ def backprop(network,delta_output_layer,weighted_sums):
             
     return delta_all_layers
 
+def delta_output_layer(a,y,z,cost):
+
+	delta_out = cost_gradient(a,y)
+
+	#If Quadritic Cost or MSE is used then, multiply with sigmoid_derivative(z)
+	if cost.lower in ["mse","quadratic"]:
+		delta_out *= sigmoid_derivative(z)
+
+	return delta_out
 
 def update_weights(network,X,layer_activations,delta_all_layers,alpha):
     
@@ -129,7 +138,7 @@ def test(network,test_data):
         
     return sum((Prediction == Target))
 
-def train_SGD(network,train_data,valid_data,mini_batch_size,alpha,epochs):
+def train_SGD(network,train_data,valid_data,cost,mini_batch_size,alpha,epochs):
     
     X = train_data[0] #(784,50000)
     y = train_data[1] #(10,50000)
@@ -157,10 +166,10 @@ def train_SGD(network,train_data,valid_data,mini_batch_size,alpha,epochs):
             weighted_sums,activations = feedforward(network,Xbatch)
 
             #Step 2: Calculate Error at final layer
-            delta_output_layer = cost_gradient(activations[-1],ybatch)*sigmoid_derivative(weighted_sums[-1])
+            delta_out = delta_output_layer(activations[-1],ybatch,weighted_sums[-1],cost)
 
             #Step 3: Backpropogate Error
-            delta_all_layers = backprop(network,delta_output_layer,weighted_sums)
+            delta_all_layers = backprop(network,delta_out,weighted_sums)
 
             #Step 4: Update Weights
             update_weights(network,Xbatch,activations,delta_all_layers,alpha)
@@ -172,14 +181,15 @@ def train_SGD(network,train_data,valid_data,mini_batch_size,alpha,epochs):
     return
 
 def main():
-	#Load Data
+
+    #Load Data
     train_data,valid_data,test_data = mnist_loader.load_data_wrapper()
     
     #Initilaize Neural network with following number of neurons in respective layers
-    network = Network([784,15,10],initialization = "xavier")
+    network = Network([784,30,10],initialization = "xavier")
 
     #Train the Network using Stochastic Gradient Descent
-    train_SGD(network,train_data,valid_data,mini_batch_size=10,alpha=0.3,epochs=50)
+    train_SGD(network,train_data,valid_data,cost="entropy",mini_batch_size=50,alpha=0.5,epochs=30)
     
     #Test the network on Testing Data..
     accuracy = (test(network,test_data)/valid_data[1].shape[0])*100
