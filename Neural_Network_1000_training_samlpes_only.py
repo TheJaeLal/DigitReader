@@ -135,7 +135,10 @@ def test(network,test_data):
     
     Prediction = np.argmax(Output,axis=0)
     #Prediction --> (Number_of_training_Samples,)    
-        
+    
+    if Target.ndim>1:
+        Target = np.argmax(Target,axis=0)
+
     return sum((Prediction == Target))
 
 def train_SGD(network,train_data,valid_data,cost,mini_batch_size,alpha,epochs):
@@ -175,8 +178,14 @@ def train_SGD(network,train_data,valid_data,cost,mini_batch_size,alpha,epochs):
             update_weights(network,Xbatch,activations,delta_all_layers,alpha)
 
         #Step 5: Validation Testing
-        accuracy = (test(network,valid_data)/valid_data[1].shape[0])*100.0
-        print("End of Epoch {}: accuracy = {}".format(e,accuracy))
+
+        #Test on Training_Data
+        accuracy_train_data = (test(network,train_data)/train_data[1].shape[1])*100.0 
+
+        #Test on Validation Data
+        accuracy_test_data = (test(network,valid_data)/valid_data[1].shape[0])*100.0
+        
+        print("End of Epoch {0}: accuracy_on(train,test) = ({1:.4},{2:.4})".format(e,accuracy_train_data,accuracy_test_data))
     
     return
 
@@ -185,21 +194,20 @@ def main():
     #Load Data
     train_data,valid_data,test_data = mnist_loader.load_data_wrapper()
     
-    X = train_data[0] #(784,50000)
-    y = train_data[1] #(10,50000)
-
-    #Extract only first 1000 samples from 50,000 
-    train_data = (X.transpose()[:1000].transpose(),y.transpose()[:1000].transpose()) 
+    #Use only 1000 training samples
+    train_data = (train_data[0].transpose()[:1000].transpose(),train_data[1].transpose()[:1000].transpose())
 
     #Initilaize Neural network with following number of neurons in respective layers
     network = Network([784,30,10],initialization = "xavier")
 
     #Train the Network using Stochastic Gradient Descent
-    train_SGD(network,train_data,valid_data,cost="entropy",mini_batch_size=10,alpha=0.5,epochs=400)
+    train_SGD(network,train_data,valid_data,cost="entropy",mini_batch_size=50,alpha=0.5,epochs=100)
     
     #Test the network on Testing Data..
-    accuracy = (test(nectwork,test_data)/valid_data[1].shape[0])*100
+    accuracy = (test(network,test_data)/valid_data[1].shape[0])*100
+    
     print("On Testing Data: Accuracy =",accuracy)
+
 
 if __name__=='__main__':
     main()
