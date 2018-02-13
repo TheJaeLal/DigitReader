@@ -27,19 +27,19 @@ class Network:
 
     #Weights Initialization strategies..
     def init_xavier(self):
-    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]) * np.sqrt(6.0 /(self.neurons[i]+self.neurons[i-1])) for i in range(1,self.layers)]
-    	self.biases = [np.zeros((self.neurons[i],1)) for i in range(1,self.layers)]
+    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]).astype(np.float32) * np.sqrt(6.0 /(self.neurons[i]+self.neurons[i-1])) for i in range(1,self.layers)]
+    	self.biases = [np.zeros((self.neurons[i],1)).astype(np.float32) for i in range(1,self.layers)]
     	return
 
     def init_zero(self):
-    	self.weights = [np.zeros((self.neurons[i],self.neurons[i-1])) for i in range(1,self.layers)]
-    	self.biases = [np.zeros((self.neurons[i],1)) for i in range(1,self.layers)]
+    	self.weights = [np.zeros((self.neurons[i],self.neurons[i-1])).astype(np.float32) for i in range(1,self.layers)]
+    	self.biases = [np.zeros((self.neurons[i],1)).astype(np.float32) for i in range(1,self.layers)]
     	return
     
     #Random -> normal distribution and not uniform distribution
     def init_random(self):
-    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]) for i in range(1,self.layers)]
-    	self.biases = [np.random.randn(self.neurons[i],1) for i in range(1,self.layers)]
+    	self.weights = [np.random.randn(self.neurons[i],self.neurons[i-1]).astype(np.float32) for i in range(1,self.layers)]
+    	self.biases = [np.random.randn(self.neurons[i],1).astype(np.float32) for i in range(1,self.layers)]
     	return
 
 
@@ -58,11 +58,7 @@ def create_training_list(train_data):
     X = train_data[0] #(784,50000)
     y = train_data[1] #(10,50000)
     
-
-    Xtrans = X.transpose()
-    ytrans = y.transpose()
-
-    training_list = [ [ Xtrans[j],ytrans[j] ] for j in range(X.shape[1]) ]
+    training_list = [ [ X[:,i],y[:,i] ] for i in range(X.shape[1]) ]
 
     return training_list
 
@@ -172,6 +168,8 @@ def train_SGD(network,train_data,valid_data,cost,mini_batch_size,alpha,epochs):
             
             ybatch = np.array([sample[1] for sample in training_batch]).transpose()
             
+            #print(Xbatch.shape,ybatch.shape)
+
             #Step 1: Calculate Output
             weighted_sums,activations = feedforward(network,Xbatch)
 
