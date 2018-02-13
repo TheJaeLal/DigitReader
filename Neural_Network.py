@@ -53,6 +53,19 @@ def sigmoid_derivative(z):
 def cost_gradient(output,label):
     return output-label
 
+def create_training_list(train_data):
+
+    X = train_data[0] #(784,50000)
+    y = train_data[1] #(10,50000)
+    
+
+    Xtrans = X.transpose()
+    ytrans = y.transpose()
+
+    training_list = [ [ Xtrans[j],ytrans[j] ] for j in range(X.shape[1]) ]
+
+    return training_list
+
 def feedforward(network,X):
     
     #Stores the Aj values
@@ -139,17 +152,14 @@ def test(network,test_data):
     return sum((Prediction == Target))
 
 def train_SGD(network,train_data,valid_data,cost,mini_batch_size,alpha,epochs):
-    
-    X = train_data[0] #(784,50000)
-    y = train_data[1] #(10,50000)
-    
+
+    #zip(x,y) and return a list of tuples each containing X and y
+    training_list = create_training_list(train_data)
+
+    #Adjust alpha for batch size
     alpha = alpha/float(mini_batch_size)
+
     for e in range(epochs):
-
-        Xtrans = X.transpose()
-        ytrans = y.transpose()
-
-        training_list = [ [ Xtrans[i],ytrans[i] ] for i in range(X.shape[1]) ]
 
         random.shuffle(training_list)
         
