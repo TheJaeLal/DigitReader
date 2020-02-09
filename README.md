@@ -8,5 +8,5 @@ An Object Oriented Feed Forward Neural Net Implementation in Numpy.
 - Initialization: Zero, Random Normal, Xavier
 
 # Dependancies
-Python >= 3.5
-Numpy >= 1.15
+- Python >= 3.5
+- Numpy >= 1.15
